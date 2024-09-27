@@ -84,7 +84,14 @@ ecr:PutLifecyclePolicy
 ```
 sts:AssumeRole lambda.amazonaws.com
 ```
-3. 注意事项
+3. 生成lambda_url `https://XXXXX.lambda-url.${region}.on.aws/`
+4. ci触发举例
+```
+PostJson: https://XXXXX.lambda-url.${region}.on.aws/
+PostJsonHeaders map[Content-Type:application/json]
+PostJsonData {"source_repo":"git@github.com:XXX/XXX.git","tag":"v1.0.2","micrservice_name":"YourName","ci_type":"npm","install_only_module_name":""}
+```
+5. 注意事项
 + Dockerfile中golang、node版本可根据实际需求更换
 + 部分前端及node项目磁盘容量不足，需增加额外磁盘，建议至少2G
 ```
@@ -93,3 +100,4 @@ ephemeral_storage {
 }
 ```
 + efs的相关端口需在安全组中放开
++ install_only_module_name参数表示只安装依赖不实施编译，这对golang的私有仓库依赖包比较实用，比如依赖一个私有的common库，可以指定这个参数为其包名

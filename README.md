@@ -1,8 +1,15 @@
 # aws-lambda-ci-runner
 用于golang、npm、yarn、node的CI的aws-lambda执行器，可自行改动
-1. Dockerfile中golang、node版本可根据实际需求更换
-2. 建议使用EFS磁盘，lambda和CI的目标服务器都绑定其$HOME目录，可以多处绑定以便进行资源共享
-3. 环境变量举例：
+1. 部署到ECR
+```
+docker build --platform linux/amd64 -t ${aws_account}.dkr.ecr.${region}.amazonaws.com/${repo_name}:${tag} .
+docker push ${aws_account}.dkr.ecr.${region}.amazonaws.com/${repo_name}:${tag}
+```
+2. 创建EFS磁盘，挂载点/mnt/home，预先挂载至CI目标服务器
+3. 创建lambda
++ 需挂载EFS的/mnt/home目录
++ 设置Image为ecr的链接：`${aws_account}.dkr.ecr.${region}.amazonaws.com/${repo_name}:${tag}`
++ 环境变量举例：
 ```GITHUB_PRIVATE_KEY = file("~/.ssh/id_ed25519")
 GOLDFLAGS   = "-extldflags --static"
 CGO_ENABLED = "1"
@@ -11,7 +18,7 @@ GOARCH      = "amd64"
 HOME = "/mnt/home"
 PATH="/usr/local/node/bin:/usr/local/bin:/usr/bin/:/bin:/usr/local/go/bin:/usr/local/sbin:/usr/sbin:/sbin"
 ```
-4. Lambda需要的权限（含EFS）
++ Lambda需要的权限（含EFS）
 ```
 ec2:AllocateAddress
 ec2:AssociateAddress
@@ -77,10 +84,12 @@ ecr:PutLifecyclePolicy
 ```
 sts:AssumeRole lambda.amazonaws.com
 ```
-6. 部分前端及node项目磁盘容量不足，需增加额外磁盘，建议至少2G
+3. 注意事项
++ Dockerfile中golang、node版本可根据实际需求更换
++ 部分前端及node项目磁盘容量不足，需增加额外磁盘，建议至少2G
 ```
 ephemeral_storage {
   size = 2048
 }
 ```
-7. efs的相关端口需在安全组中放开
++ efs的相关端口需在安全组中放开
